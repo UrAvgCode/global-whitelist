@@ -42,7 +42,7 @@ public final class WhitelistCommand {
 
     private static LiteralArgumentBuilder<CommandSource> buildAddCommand(WhitelistCommandHandler handler) {
         return BrigadierCommand.literalArgumentBuilder("add")
-            .requires(source -> source.hasPermission(PERMISSION_BASE))
+            .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
             .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
                 .suggests(handler::suggestOnlinePlayers)
                 .executes(handler::add));
@@ -50,7 +50,7 @@ public final class WhitelistCommand {
 
     private static LiteralArgumentBuilder<CommandSource> buildRemoveCommand(WhitelistCommandHandler handler) {
         return BrigadierCommand.literalArgumentBuilder("remove")
-            .requires(source -> source.hasPermission(PERMISSION_BASE))
+            .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
             .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
                 .suggests(handler::suggestWhitelistedPlayers)
                 .executes(handler::remove));
@@ -58,13 +58,13 @@ public final class WhitelistCommand {
 
     private static LiteralArgumentBuilder<CommandSource> buildListCommand(WhitelistCommandHandler handler) {
         return BrigadierCommand.literalArgumentBuilder("list")
-            .requires(source -> source.hasPermission(PERMISSION_BASE))
+            .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
             .executes(handler::list);
     }
 
     private static LiteralArgumentBuilder<CommandSource> buildOnCommand(WhitelistCommandHandler handler) {
         return BrigadierCommand.literalArgumentBuilder("on")
-            .requires(source -> source.hasPermission(PERMISSION_ADMIN))
+            .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
             .executes(handler::on);
     }
 
