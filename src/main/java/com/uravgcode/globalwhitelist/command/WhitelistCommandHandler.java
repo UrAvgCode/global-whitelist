@@ -98,7 +98,7 @@ public class WhitelistCommandHandler {
     }
 
     public int on(CommandContext<CommandSource> context) {
-        CommandSource source = context.getSource();
+        var source = context.getSource();
 
         if (config.whitelistEnabled()) {
             source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ON_ALREADY));
@@ -118,7 +118,7 @@ public class WhitelistCommandHandler {
     }
 
     public int off(CommandContext<CommandSource> context) {
-        CommandSource source = context.getSource();
+        var source = context.getSource();
 
         if (config.whitelistEnabled()) {
             config.setWhitelistEnabled(false);
@@ -131,7 +131,7 @@ public class WhitelistCommandHandler {
     }
 
     public int enforced(CommandContext<CommandSource> context) {
-        CommandSource source = context.getSource();
+        var source = context.getSource();
 
         if (config.enforceWhitelistEnabled()) {
             source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ENFORCED_ALREADY));
@@ -151,7 +151,7 @@ public class WhitelistCommandHandler {
     }
 
     public int unenforced(CommandContext<CommandSource> context) {
-        CommandSource source = context.getSource();
+        var source = context.getSource();
 
         if (config.enforceWhitelistEnabled()) {
             config.setEnforceWhitelistEnabled(false);
@@ -167,8 +167,7 @@ public class WhitelistCommandHandler {
         whitelist.reload();
         config.reload();
         messages.reload();
-        CommandSource source = context.getSource();
-        source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_RELOAD));
+        context.getSource().sendMessage(messages.getMessage(MessagesConfig.WHITELIST_RELOAD));
         return Command.SINGLE_SUCCESS;
     }
 }

@@ -24,7 +24,7 @@ public final class WhitelistCommand {
     ) {
         var commandHandler = new WhitelistCommandHandler(proxy, profileService, whitelist, config, messages);
 
-        LiteralCommandNode<CommandSource> helloNode = BrigadierCommand.literalArgumentBuilder("globalwhitelist")
+        var rootNode = BrigadierCommand.literalArgumentBuilder("globalwhitelist")
             .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
             .executes(commandHandler::help)
             .then(buildAddCommand(commandHandler))
@@ -37,7 +37,7 @@ public final class WhitelistCommand {
             .then(buildUnenforcedCommand(commandHandler))
             .build();
 
-        return new BrigadierCommand(helloNode);
+        return new BrigadierCommand(rootNode);
     }
 
     private static LiteralArgumentBuilder<CommandSource> buildAddCommand(WhitelistCommandHandler handler) {
