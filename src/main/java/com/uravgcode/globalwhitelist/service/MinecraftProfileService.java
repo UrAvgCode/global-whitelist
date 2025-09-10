@@ -1,6 +1,5 @@
 package com.uravgcode.globalwhitelist.service;
 
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.uravgcode.globalwhitelist.whitelist.PlayerProfile;
 import org.slf4j.Logger;
@@ -13,11 +12,9 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 public class MinecraftProfileService {
     private static final URI API_BASE_URL = URI.create("https://api.minecraftservices.com/minecraft/profile/lookup/name/");
-    private static final Pattern UUID_PATTERN = Pattern.compile("(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{12})");
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
 
     private final Logger logger;
@@ -69,27 +66,30 @@ public class MinecraftProfileService {
 
     private Optional<PlayerProfile> parseProfile(String jsonString) {
         try {
-            JsonObject jsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
-
+            var jsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
             if (!jsonObject.has("id") || !jsonObject.has("name")) {
-                logger.warn("missing 'id' or 'name' in json:\n{}", jsonString);
+                logger.warn("json is missing required fields:\n{}", jsonString);
                 return Optional.empty();
             }
 
             String uuidString = jsonObject.get("id").getAsString();
             String name = jsonObject.get("name").getAsString();
 
-            var matcher = UUID_PATTERN.matcher(uuidString);
-            if (!matcher.matches()) {
-                logger.warn("invalid uuid format in json:\n{}", jsonString);
-                return Optional.empty();
-            }
-
-            var uuid = UUID.fromString(matcher.replaceFirst("$1-$2-$3-$4-$5"));
-            return Optional.of(new PlayerProfile(uuid, name));
+            return parseUUID(uuidString).map(uuid -> new PlayerProfile(uuid, name));
 
         } catch (Exception e) {
             logger.error("failed to parse json:\n{}\nerror: {}", jsonString, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private Optional<UUID> parseUUID(String uuidString) {
+        try {
+            long mostSigBits = Long.parseUnsignedLong(uuidString.substring(0, 16), 16);
+            long leastSigBits = Long.parseUnsignedLong(uuidString.substring(16), 16);
+            return Optional.of(new UUID(mostSigBits, leastSigBits));
+        } catch (NumberFormatException e) {
+            logger.warn("invalid uuid format: {}", uuidString);
             return Optional.empty();
         }
     }

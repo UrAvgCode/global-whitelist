@@ -2,7 +2,6 @@ package com.uravgcode.globalwhitelist.command;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.uravgcode.globalwhitelist.config.MessagesConfig;
 import com.uravgcode.globalwhitelist.config.WhitelistConfig;
 import com.uravgcode.globalwhitelist.service.MinecraftProfileService;
