@@ -14,28 +14,13 @@ import com.velocitypowered.api.proxy.ProxyServer;
 
 import java.util.concurrent.CompletableFuture;
 
-public class WhitelistCommandHandler {
-    private final ProxyServer proxy;
-    private final MinecraftProfileService profileService;
-
-    private final Whitelist whitelist;
-    private final WhitelistConfig config;
-    private final MessagesConfig messages;
-
-    public WhitelistCommandHandler(
-        final ProxyServer proxy,
-        final MinecraftProfileService profileService,
-        final Whitelist whitelist,
-        final WhitelistConfig config,
-        final MessagesConfig messages
-    ) {
-        this.proxy = proxy;
-        this.profileService = profileService;
-        this.whitelist = whitelist;
-        this.config = config;
-        this.messages = messages;
-    }
-
+public record WhitelistCommandHandler(
+    ProxyServer proxy,
+    MinecraftProfileService profileService,
+    Whitelist whitelist,
+    WhitelistConfig config,
+    MessagesConfig messages
+) {
     public CompletableFuture<Suggestions> suggestOnlinePlayers(CommandContext<CommandSource> ignored, SuggestionsBuilder builder) {
         proxy.getAllPlayers().forEach(player -> builder.suggest(player.getUsername()));
         return builder.buildFuture();

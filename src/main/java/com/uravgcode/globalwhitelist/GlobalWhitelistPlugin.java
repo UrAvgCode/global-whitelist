@@ -74,7 +74,7 @@ public class GlobalWhitelistPlugin {
             .plugin(this)
             .build();
 
-        var command = WhitelistCommand.createBrigadierCommand(proxy, profileService, whitelist, config, messages);
+        var command = WhitelistCommand.createCommand(proxy, profileService, whitelist, config, messages);
         commandManager.register(commandMeta, command);
     }
 }

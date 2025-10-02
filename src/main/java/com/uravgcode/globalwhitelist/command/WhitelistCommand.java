@@ -14,12 +14,12 @@ public final class WhitelistCommand {
     private static final String PERMISSION_BASE = "globalwhitelist";
     private static final String PERMISSION_ADMIN = "globalwhitelist.admin";
 
-    public static BrigadierCommand createBrigadierCommand(
-        final ProxyServer proxy,
-        final MinecraftProfileService profileService,
-        final Whitelist whitelist,
-        final WhitelistConfig config,
-        final MessagesConfig messages
+    public static BrigadierCommand createCommand(
+        ProxyServer proxy,
+        MinecraftProfileService profileService,
+        Whitelist whitelist,
+        WhitelistConfig config,
+        MessagesConfig messages
     ) {
         var commandHandler = new WhitelistCommandHandler(proxy, profileService, whitelist, config, messages);
 
