@@ -4,7 +4,7 @@
 # log file
 *.log
 
-# package files #
+# package files
 *.jar
 *.war
 *.nar
@@ -24,3 +24,6 @@ gradle-app.setting
 
 # intellij
 .idea/
+
+# server
+run/
