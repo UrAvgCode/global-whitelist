@@ -34,6 +34,9 @@ public final class WhitelistCommand {
             .then(buildOffCommand(commandHandler))
             .then(buildEnforcedCommand(commandHandler))
             .then(buildUnenforcedCommand(commandHandler))
+            .then(buildFloodgateRemoveCommand(commandHandler))
+            .then(buildFloodgateAddCommand(commandHandler))
+            .then(buildHelpCommand(commandHandler))
             .build();
 
         return new BrigadierCommand(rootNode);
@@ -47,12 +50,28 @@ public final class WhitelistCommand {
                 .executes(handler::add));
     }
 
+    private static LiteralArgumentBuilder<CommandSource> buildFloodgateAddCommand(WhitelistCommandHandler handler) {
+        return BrigadierCommand.literalArgumentBuilder("floodgate_add")
+            .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
+            .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
+                .suggests(handler::suggestOnlinePlayers)
+                .executes(handler::floodgate_add));
+    }
+
     private static LiteralArgumentBuilder<CommandSource> buildRemoveCommand(WhitelistCommandHandler handler) {
         return BrigadierCommand.literalArgumentBuilder("remove")
             .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
             .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
                 .suggests(handler::suggestWhitelistedPlayers)
                 .executes(handler::remove));
+    }
+
+    private static LiteralArgumentBuilder<CommandSource> buildFloodgateRemoveCommand(WhitelistCommandHandler handler) {
+        return BrigadierCommand.literalArgumentBuilder("floodgate_remove")
+            .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
+            .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
+                .suggests(handler::suggestWhitelistedPlayers)
+                .executes(handler::floodgate_remove));
     }
 
     private static LiteralArgumentBuilder<CommandSource> buildListCommand(WhitelistCommandHandler handler) {
@@ -89,5 +108,11 @@ public final class WhitelistCommand {
         return BrigadierCommand.literalArgumentBuilder("reload")
             .requires(source -> source.hasPermission(PERMISSION_ADMIN))
             .executes(handler::reload);
+    }
+
+    private static LiteralArgumentBuilder<CommandSource> buildHelpCommand(WhitelistCommandHandler handler) {
+        return BrigadierCommand.literalArgumentBuilder("help")
+            .requires(source -> source.hasPermission(PERMISSION_BASE))
+            .executes(handler::help);
     }
 }
