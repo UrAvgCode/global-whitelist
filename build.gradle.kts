@@ -29,7 +29,7 @@ tasks {
 val templateSource = file("src/main/templates")
 val templateDest = layout.buildDirectory.dir("generated/sources/templates")
 
-val generateTemplates by tasks.registering(Copy::class) {
+val generateTemplates = tasks.register<Copy>("generateTemplates") {
     val props = mapOf("version" to project.version)
     inputs.properties(props)
 
