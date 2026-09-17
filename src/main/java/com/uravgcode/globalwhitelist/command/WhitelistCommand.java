@@ -26,17 +26,24 @@ public final class WhitelistCommand {
         var rootNode = BrigadierCommand.literalArgumentBuilder("globalwhitelist")
             .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
             .executes(commandHandler::help)
+            .then(buildHelpCommand(commandHandler))
             .then(buildAddCommand(commandHandler))
             .then(buildRemoveCommand(commandHandler))
             .then(buildListCommand(commandHandler))
-            .then(buildReloadCommand(commandHandler))
             .then(buildOnCommand(commandHandler))
             .then(buildOffCommand(commandHandler))
             .then(buildEnforcedCommand(commandHandler))
             .then(buildUnenforcedCommand(commandHandler))
+            .then(buildReloadCommand(commandHandler))
             .build();
 
         return new BrigadierCommand(rootNode);
+    }
+
+    private static LiteralArgumentBuilder<CommandSource> buildHelpCommand(WhitelistCommandHandler handler) {
+        return BrigadierCommand.literalArgumentBuilder("help")
+            .requires(source -> source.hasPermission(PERMISSION_BASE))
+            .executes(handler::help);
     }
 
     private static LiteralArgumentBuilder<CommandSource> buildAddCommand(WhitelistCommandHandler handler) {
@@ -44,7 +51,12 @@ public final class WhitelistCommand {
             .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
             .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
                 .suggests(handler::suggestOnlinePlayers)
-                .executes(handler::add));
+                .executes(handler::add)
+                .then(BrigadierCommand.literalArgumentBuilder("java")
+                    .executes(handler::addJava))
+                .then(BrigadierCommand.literalArgumentBuilder("bedrock")
+                    .executes(handler::addBedrock))
+            );
     }
 
     private static LiteralArgumentBuilder<CommandSource> buildRemoveCommand(WhitelistCommandHandler handler) {
@@ -52,7 +64,12 @@ public final class WhitelistCommand {
             .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
             .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
                 .suggests(handler::suggestWhitelistedPlayers)
-                .executes(handler::remove));
+                .executes(handler::remove)
+                .then(BrigadierCommand.literalArgumentBuilder("java")
+                    .executes(handler::removeJava))
+                .then(BrigadierCommand.literalArgumentBuilder("bedrock")
+                    .executes(handler::removeBedrock))
+            );
     }
 
     private static LiteralArgumentBuilder<CommandSource> buildListCommand(WhitelistCommandHandler handler) {
@@ -63,7 +80,7 @@ public final class WhitelistCommand {
 
     private static LiteralArgumentBuilder<CommandSource> buildOnCommand(WhitelistCommandHandler handler) {
         return BrigadierCommand.literalArgumentBuilder("on")
-            .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
+            .requires(source -> source.hasPermission(PERMISSION_ADMIN))
             .executes(handler::on);
     }
 

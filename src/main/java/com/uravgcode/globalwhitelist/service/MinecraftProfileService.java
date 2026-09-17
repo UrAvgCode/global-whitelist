@@ -14,7 +14,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class MinecraftProfileService {
-    private static final URI API_BASE_URL = URI.create("https://api.minecraftservices.com/minecraft/profile/lookup/name/");
+    private static final URI MINECRAFT_API_BASE_URL = URI.create("https://api.minecraftservices.com/minecraft/profile/lookup/name/");
+    private static final URI FLOODGATE_API_BASE_URL = URI.create("https://api.geysermc.org/v2/utils/uuid/bedrock_or_java/");
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
 
     private final Logger logger;
@@ -27,7 +28,17 @@ public class MinecraftProfileService {
             .build();
     }
 
-    public Optional<PlayerProfile> getProfile(String playerName) {
+    public Optional<PlayerProfile> getJavaProfile(String playerName) {
+        final var apiUrl = URI.create(MINECRAFT_API_BASE_URL + playerName);
+        return getProfile(playerName, apiUrl);
+    }
+
+    public Optional<PlayerProfile> getBedrockProfile(String playerName) {
+        final var apiUrl = URI.create(FLOODGATE_API_BASE_URL + playerName + "?prefix=" + playerName.charAt(0));
+        return getProfile(playerName, apiUrl);
+    }
+
+    private Optional<PlayerProfile> getProfile(String playerName, URI apiUrl) {
         if (playerName == null || playerName.isBlank()) {
             logger.warn("player name cannot be null or empty");
             return Optional.empty();
@@ -35,7 +46,7 @@ public class MinecraftProfileService {
 
         try {
             var request = HttpRequest.newBuilder()
-                .uri(API_BASE_URL.resolve(playerName))
+                .uri(apiUrl)
                 .timeout(TIMEOUT)
                 .GET()
                 .build();
@@ -50,6 +61,7 @@ public class MinecraftProfileService {
                 }
                 default -> {
                     logger.warn("api request failed with status {}: {}", response.statusCode(), response.body());
+                    logger.warn(apiUrl.toString());
                     yield Optional.empty();
                 }
             };
