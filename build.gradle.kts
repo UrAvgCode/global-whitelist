@@ -7,7 +7,7 @@ group = "com.uravgcode"
 version = "1.0"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 dependencies {
@@ -18,11 +18,11 @@ dependencies {
 tasks {
     withType<JavaCompile>().configureEach {
         options.encoding = "UTF-8"
-        options.release.set(21)
+        options.release.set(25)
     }
 
     runVelocity {
-        velocityVersion("3.4.0-SNAPSHOT")
+        velocityVersion("4.1.2-SNAPSHOT")
     }
 }
 
