@@ -9,64 +9,63 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Whitelist {
     private final Logger logger;
     private final File whitelistFile;
-    private final Set<PlayerProfile> whitelistPlayers;
+    private final Set<PlayerProfile> whitelist;
 
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     public Whitelist(Path whitelistPath, Logger logger) {
         this.logger = logger;
         this.whitelistFile = whitelistPath.toFile();
-        this.whitelistPlayers = new HashSet<>();
+        this.whitelist = ConcurrentHashMap.newKeySet();
     }
 
-    public boolean contains(PlayerProfile player) {
-        return whitelistPlayers.contains(player);
-    }
-
-    public boolean add(PlayerProfile player) {
-        if (whitelistPlayers.add(player)) {
-            save();
-            return true;
-        }
-        return false;
-    }
-
-    public boolean remove(PlayerProfile player) {
-        if (whitelistPlayers.remove(player)) {
-            save();
-            return true;
-        }
-        return false;
+    public boolean contains(PlayerProfile profile) {
+        return whitelist.contains(profile);
     }
 
     public List<String> list() {
-        return whitelistPlayers.stream().map(PlayerProfile::name).toList();
+        return whitelist.stream().map(PlayerProfile::name).toList();
+    }
+
+    public boolean add(PlayerProfile profile) {
+        if (whitelist.add(profile)) {
+            save();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean remove(PlayerProfile profile) {
+        if (whitelist.remove(profile)) {
+            save();
+            return true;
+        }
+        return false;
     }
 
     public void reload() {
         try {
             if (whitelistFile.createNewFile()) {
-                whitelistPlayers.clear();
+                whitelist.clear();
                 return;
             }
 
             try (FileReader reader = new FileReader(whitelistFile)) {
-                Type listType = new TypeToken<List<PlayerProfile>>() {
+                final var listType = new TypeToken<List<PlayerProfile>>() {
                 }.getType();
-                List<PlayerProfile> players = gson.fromJson(reader, listType);
+                final List<PlayerProfile> profiles = gson.fromJson(reader, listType);
 
-                if (players != null) {
-                    whitelistPlayers.clear();
-                    whitelistPlayers.addAll(players);
+                if (profiles != null) {
+                    whitelist.clear();
+                    whitelist.addAll(profiles);
                 }
             }
         } catch (IOException e) {
@@ -76,7 +75,7 @@ public class Whitelist {
 
     private void save() {
         try (FileWriter writer = new FileWriter(whitelistFile)) {
-            gson.toJson(List.copyOf(whitelistPlayers), writer);
+            gson.toJson(List.copyOf(whitelist), writer);
         } catch (IOException e) {
             logger.error("failed to save whitelist: {}", e.getMessage());
         }

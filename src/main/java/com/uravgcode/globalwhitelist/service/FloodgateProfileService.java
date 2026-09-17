@@ -3,6 +3,7 @@ package com.uravgcode.globalwhitelist.service;
 import com.uravgcode.globalwhitelist.whitelist.PlayerProfile;
 import org.geysermc.floodgate.api.FloodgateApi;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class FloodgateProfileService {
@@ -17,7 +18,7 @@ public class FloodgateProfileService {
         return playerName.startsWith(prefix);
     }
 
-    public CompletableFuture<PlayerProfile> getProfile(String playerName) {
+    public CompletableFuture<Optional<PlayerProfile>> getProfile(String playerName) {
         if (playerName == null || playerName.isBlank()) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("player name cannot be null or empty"));
         }
@@ -28,11 +29,8 @@ public class FloodgateProfileService {
         }
 
         var gamertag = playerName.substring(prefix.length());
-        return api.getUuidFor(gamertag).thenApply(uuid -> {
-            if (uuid == null) {
-                return null;
-            }
-            return new PlayerProfile(uuid, playerName);
-        });
+        return api.getUuidFor(gamertag)
+            .thenApply(uuid -> Optional.ofNullable(uuid)
+                .map(id -> new PlayerProfile(id, playerName)));
     }
 }

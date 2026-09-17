@@ -52,13 +52,15 @@ public record WhitelistCommandHandler(
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        minecraftProfileService.getProfile(playerName).ifPresentOrElse(player -> {
-            if (whitelist.add(player)) {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_SUCCESS, playerName));
-            } else {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_ALREADY_WHITELISTED, playerName));
-            }
-        }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
+        minecraftProfileService.getProfile(playerName).thenAccept(response -> {
+            response.ifPresentOrElse(profile -> {
+                if (whitelist.add(profile)) {
+                    source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_SUCCESS, playerName));
+                } else {
+                    source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_ALREADY_WHITELISTED, playerName));
+                }
+            }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
+        });
 
         return Command.SINGLE_SUCCESS;
     }
@@ -67,13 +69,15 @@ public record WhitelistCommandHandler(
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        floodgateProfileService.getProfile(playerName).thenAcceptAsync(profile -> {
-            if (whitelist.add(profile)) {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_SUCCESS, playerName));
-            } else {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_ALREADY_WHITELISTED, playerName));
-            }
-        }).exceptionallyAsync(_ -> {
+        floodgateProfileService.getProfile(playerName).thenAccept(response -> {
+            response.ifPresentOrElse(profile -> {
+                if (whitelist.add(profile)) {
+                    source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_SUCCESS, playerName));
+                } else {
+                    source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_ALREADY_WHITELISTED, playerName));
+                }
+            }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
+        }).exceptionally(_ -> {
             source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName));
             return null;
         });
@@ -95,16 +99,18 @@ public record WhitelistCommandHandler(
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        minecraftProfileService.getProfile(playerName).ifPresentOrElse(player -> {
-            if (whitelist.remove(player)) {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_SUCCESS, playerName));
-                if (config.whitelistEnabled() && config.enforceWhitelistEnabled()) {
-                    proxy.getPlayer(playerName).ifPresent(p -> p.disconnect(messages.getMessage(MessagesConfig.WHITELIST_REJECTED)));
+        minecraftProfileService.getProfile(playerName).thenAccept(response -> {
+            response.ifPresentOrElse(profile -> {
+                if (whitelist.remove(profile)) {
+                    source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_SUCCESS, playerName));
+                    if (config.whitelistEnabled() && config.enforceWhitelistEnabled()) {
+                        proxy.getPlayer(playerName).ifPresent(p -> p.disconnect(messages.getMessage(MessagesConfig.WHITELIST_REJECTED)));
+                    }
+                } else {
+                    source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_NOT_WHITELISTED, playerName));
                 }
-            } else {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_NOT_WHITELISTED, playerName));
-            }
-        }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
+            }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
+        });
 
         return Command.SINGLE_SUCCESS;
     }
@@ -113,16 +119,18 @@ public record WhitelistCommandHandler(
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        floodgateProfileService.getProfile(playerName).thenAcceptAsync(profile -> {
-            if (whitelist.remove(profile)) {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_SUCCESS, playerName));
-                if (config.whitelistEnabled() && config.enforceWhitelistEnabled()) {
-                    proxy.getPlayer(playerName).ifPresent(p -> p.disconnect(messages.getMessage(MessagesConfig.WHITELIST_REJECTED)));
+        floodgateProfileService.getProfile(playerName).thenAccept(response -> {
+            response.ifPresentOrElse(profile -> {
+                if (whitelist.remove(profile)) {
+                    source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_SUCCESS, playerName));
+                    if (config.whitelistEnabled() && config.enforceWhitelistEnabled()) {
+                        proxy.getPlayer(playerName).ifPresent(p -> p.disconnect(messages.getMessage(MessagesConfig.WHITELIST_REJECTED)));
+                    }
+                } else {
+                    source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_NOT_WHITELISTED, playerName));
                 }
-            } else {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_NOT_WHITELISTED, playerName));
-            }
-        }).exceptionallyAsync(_ -> {
+            }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
+        }).exceptionally(_ -> {
             source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName));
             return null;
         });

@@ -4,7 +4,6 @@ import com.google.gson.JsonParser;
 import com.uravgcode.globalwhitelist.whitelist.PlayerProfile;
 import org.slf4j.Logger;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -12,6 +11,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class MinecraftProfileService {
     private static final URI API_BASE_URL = URI.create("https://api.minecraftservices.com/minecraft/profile/lookup/name/");
@@ -27,10 +27,9 @@ public class MinecraftProfileService {
             .build();
     }
 
-    public Optional<PlayerProfile> getProfile(String playerName) {
+    public CompletableFuture<Optional<PlayerProfile>> getProfile(String playerName) {
         if (playerName == null || playerName.isBlank()) {
-            logger.warn("player name cannot be null or empty");
-            return Optional.empty();
+            return CompletableFuture.failedFuture(new IllegalArgumentException("player name cannot be null or empty"));
         }
 
         try {
@@ -40,27 +39,21 @@ public class MinecraftProfileService {
                 .GET()
                 .build();
 
-            var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> switch (response.statusCode()) {
+                    case 200 -> parseProfile(response.body());
+                    case 404 -> {
+                        logger.warn("player with name {} not found", playerName);
+                        yield Optional.empty();
+                    }
+                    default -> {
+                        logger.warn("api request failed with status {}: {}", response.statusCode(), response.body());
+                        yield Optional.empty();
+                    }
+                });
 
-            return switch (response.statusCode()) {
-                case 200 -> parseProfile(response.body());
-                case 404 -> {
-                    logger.warn("player with name {} not found", playerName);
-                    yield Optional.empty();
-                }
-                default -> {
-                    logger.warn("api request failed with status {}: {}", response.statusCode(), response.body());
-                    yield Optional.empty();
-                }
-            };
-
-        } catch (IOException e) {
-            logger.error("network error while fetching profile for '{}': {}", playerName, e.getMessage());
-            return Optional.empty();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            logger.error("request interrupted while fetching profile for '{}': {}", playerName, e.getMessage());
-            return Optional.empty();
+        } catch (IllegalArgumentException exception) {
+            return CompletableFuture.failedFuture(exception);
         }
     }
 
