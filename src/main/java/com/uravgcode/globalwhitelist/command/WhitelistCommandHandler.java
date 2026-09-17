@@ -40,7 +40,12 @@ public record WhitelistCommandHandler(
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        profileService.getProfile(playerName, false).ifPresentOrElse(player -> {
+        var profile = profileService.getJavaProfile(playerName);
+        if (profile.isEmpty()) {
+            profile = profileService.getBedrockProfile(playerName);
+        }
+
+        profile.ifPresentOrElse(player -> {
             if (whitelist.add(player)) {
                 source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_SUCCESS, playerName));
             } else {
@@ -51,11 +56,26 @@ public record WhitelistCommandHandler(
         return Command.SINGLE_SUCCESS;
     }
 
-    public int floodgate_add(CommandContext<CommandSource> context) {
+    public int addJava(CommandContext<CommandSource> context) {
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        profileService.getProfile(playerName, true).ifPresentOrElse(player -> {
+        profileService.getJavaProfile(playerName).ifPresentOrElse(player -> {
+            if (whitelist.add(player)) {
+                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_SUCCESS, playerName));
+            } else {
+                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_ALREADY_WHITELISTED, playerName));
+            }
+        }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    public int addBedrock(CommandContext<CommandSource> context) {
+        var source = context.getSource();
+        var playerName = context.getArgument("player", String.class);
+
+        profileService.getBedrockProfile(playerName).ifPresentOrElse(player -> {
             if (whitelist.add(player)) {
                 source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_SUCCESS, playerName));
             } else {
@@ -70,7 +90,12 @@ public record WhitelistCommandHandler(
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        profileService.getProfile(playerName, false).ifPresentOrElse(player -> {
+        var profile = profileService.getJavaProfile(playerName);
+        if (profile.isEmpty()) {
+            profile = profileService.getBedrockProfile(playerName);
+        }
+
+        profile.ifPresentOrElse(player -> {
             if (whitelist.remove(player)) {
                 source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_SUCCESS, playerName));
                 if (config.whitelistEnabled() && config.enforceWhitelistEnabled()) {
@@ -84,11 +109,29 @@ public record WhitelistCommandHandler(
         return Command.SINGLE_SUCCESS;
     }
 
-    public int floodgate_remove(CommandContext<CommandSource> context) {
+    public int removeJava(CommandContext<CommandSource> context) {
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        profileService.getProfile(playerName, true).ifPresentOrElse(player -> {
+        profileService.getJavaProfile(playerName).ifPresentOrElse(player -> {
+            if (whitelist.remove(player)) {
+                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_SUCCESS, playerName));
+                if (config.whitelistEnabled() && config.enforceWhitelistEnabled()) {
+                    proxy.getPlayer(playerName).ifPresent(p -> p.disconnect(messages.getMessage(MessagesConfig.WHITELIST_REJECTED)));
+                }
+            } else {
+                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_NOT_WHITELISTED, playerName));
+            }
+        }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
+
+        return Command.SINGLE_SUCCESS;
+    }
+
+    public int removeBedrock(CommandContext<CommandSource> context) {
+        var source = context.getSource();
+        var playerName = context.getArgument("player", String.class);
+
+        profileService.getBedrockProfile(playerName).ifPresentOrElse(player -> {
             if (whitelist.remove(player)) {
                 source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_SUCCESS, playerName));
                 if (config.whitelistEnabled() && config.enforceWhitelistEnabled()) {
