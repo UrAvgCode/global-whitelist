@@ -1,9 +1,11 @@
 [versions]
-velocity-api = "3.4.0-SNAPSHOT"
+velocity-api = "4.1.2-SNAPSHOT"
+floodgate-api = "2.2.5-SNAPSHOT"
 run-task = "3.1.0"
 
 [libraries]
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity-api" }
+floodgate-api = { module = "org.geysermc.floodgate:api", version.ref = "floodgate-api" }
 
 [plugins]
 run-velocity = { id = "xyz.jpenilla.run-velocity", version.ref = "run-task" }

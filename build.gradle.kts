@@ -12,6 +12,7 @@ java {
 
 dependencies {
     compileOnly(libs.velocity.api)
+    compileOnly(libs.floodgate.api)
     annotationProcessor(libs.velocity.api)
 }
 

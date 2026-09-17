@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.uravgcode.globalwhitelist.config.MessagesConfig;
 import com.uravgcode.globalwhitelist.config.WhitelistConfig;
+import com.uravgcode.globalwhitelist.service.FloodgateProfileService;
 import com.uravgcode.globalwhitelist.service.MinecraftProfileService;
 import com.uravgcode.globalwhitelist.whitelist.Whitelist;
 import com.velocitypowered.api.command.BrigadierCommand;
@@ -16,28 +17,29 @@ public final class WhitelistCommand {
 
     public static BrigadierCommand createCommand(
         ProxyServer proxy,
-        MinecraftProfileService profileService,
+        MinecraftProfileService minecraftProfileService,
+        FloodgateProfileService floodgateProfileService,
         Whitelist whitelist,
         WhitelistConfig config,
         MessagesConfig messages
     ) {
-        var commandHandler = new WhitelistCommandHandler(proxy, profileService, whitelist, config, messages);
+        final var handler = new WhitelistCommandHandler(proxy, minecraftProfileService, floodgateProfileService, whitelist, config, messages);
 
-        var rootNode = BrigadierCommand.literalArgumentBuilder("globalwhitelist")
+        final var node = BrigadierCommand.literalArgumentBuilder("globalwhitelist")
             .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
-            .executes(commandHandler::help)
-            .then(buildHelpCommand(commandHandler))
-            .then(buildAddCommand(commandHandler))
-            .then(buildRemoveCommand(commandHandler))
-            .then(buildListCommand(commandHandler))
-            .then(buildOnCommand(commandHandler))
-            .then(buildOffCommand(commandHandler))
-            .then(buildEnforcedCommand(commandHandler))
-            .then(buildUnenforcedCommand(commandHandler))
-            .then(buildReloadCommand(commandHandler))
+            .executes(handler::help)
+            .then(buildHelpCommand(handler))
+            .then(buildAddCommand(handler))
+            .then(buildRemoveCommand(handler))
+            .then(buildListCommand(handler))
+            .then(buildOnCommand(handler))
+            .then(buildOffCommand(handler))
+            .then(buildEnforcedCommand(handler))
+            .then(buildUnenforcedCommand(handler))
+            .then(buildReloadCommand(handler))
             .build();
 
-        return new BrigadierCommand(rootNode);
+        return new BrigadierCommand(node);
     }
 
     private static LiteralArgumentBuilder<CommandSource> buildHelpCommand(WhitelistCommandHandler handler) {

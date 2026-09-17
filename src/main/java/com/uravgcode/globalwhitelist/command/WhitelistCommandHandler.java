@@ -6,6 +6,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.uravgcode.globalwhitelist.config.MessagesConfig;
 import com.uravgcode.globalwhitelist.config.WhitelistConfig;
+import com.uravgcode.globalwhitelist.service.FloodgateProfileService;
 import com.uravgcode.globalwhitelist.service.MinecraftProfileService;
 import com.uravgcode.globalwhitelist.whitelist.PlayerProfile;
 import com.uravgcode.globalwhitelist.whitelist.Whitelist;
@@ -16,7 +17,8 @@ import java.util.concurrent.CompletableFuture;
 
 public record WhitelistCommandHandler(
     ProxyServer proxy,
-    MinecraftProfileService profileService,
+    MinecraftProfileService minecraftProfileService,
+    FloodgateProfileService floodgateProfileService,
     Whitelist whitelist,
     WhitelistConfig config,
     MessagesConfig messages
@@ -37,30 +39,20 @@ public record WhitelistCommandHandler(
     }
 
     public int add(CommandContext<CommandSource> context) {
-        var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        var profile = profileService.getJavaProfile(playerName);
-        if (profile.isEmpty()) {
-            profile = profileService.getBedrockProfile(playerName);
+        if (floodgateProfileService != null && floodgateProfileService.isProfile(playerName)) {
+            return addBedrock(context);
+        } else {
+            return addJava(context);
         }
-
-        profile.ifPresentOrElse(player -> {
-            if (whitelist.add(player)) {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_SUCCESS, playerName));
-            } else {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_ALREADY_WHITELISTED, playerName));
-            }
-        }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
-
-        return Command.SINGLE_SUCCESS;
     }
 
     public int addJava(CommandContext<CommandSource> context) {
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        profileService.getJavaProfile(playerName).ifPresentOrElse(player -> {
+        minecraftProfileService.getProfile(playerName).ifPresentOrElse(player -> {
             if (whitelist.add(player)) {
                 source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_SUCCESS, playerName));
             } else {
@@ -75,45 +67,35 @@ public record WhitelistCommandHandler(
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        profileService.getBedrockProfile(playerName).ifPresentOrElse(player -> {
-            if (whitelist.add(player)) {
+        floodgateProfileService.getProfile(playerName).thenAcceptAsync(profile -> {
+            if (whitelist.add(profile)) {
                 source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_SUCCESS, playerName));
             } else {
                 source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_ADD_ALREADY_WHITELISTED, playerName));
             }
-        }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
+        }).exceptionallyAsync(_ -> {
+            source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName));
+            return null;
+        });
 
         return Command.SINGLE_SUCCESS;
     }
 
     public int remove(CommandContext<CommandSource> context) {
-        var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        var profile = profileService.getJavaProfile(playerName);
-        if (profile.isEmpty()) {
-            profile = profileService.getBedrockProfile(playerName);
+        if (floodgateProfileService != null && floodgateProfileService.isProfile(playerName)) {
+            return removeBedrock(context);
+        } else {
+            return removeJava(context);
         }
-
-        profile.ifPresentOrElse(player -> {
-            if (whitelist.remove(player)) {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_SUCCESS, playerName));
-                if (config.whitelistEnabled() && config.enforceWhitelistEnabled()) {
-                    proxy.getPlayer(playerName).ifPresent(p -> p.disconnect(messages.getMessage(MessagesConfig.WHITELIST_REJECTED)));
-                }
-            } else {
-                source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_NOT_WHITELISTED, playerName));
-            }
-        }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
-
-        return Command.SINGLE_SUCCESS;
     }
 
     public int removeJava(CommandContext<CommandSource> context) {
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        profileService.getJavaProfile(playerName).ifPresentOrElse(player -> {
+        minecraftProfileService.getProfile(playerName).ifPresentOrElse(player -> {
             if (whitelist.remove(player)) {
                 source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_SUCCESS, playerName));
                 if (config.whitelistEnabled() && config.enforceWhitelistEnabled()) {
@@ -131,8 +113,8 @@ public record WhitelistCommandHandler(
         var source = context.getSource();
         var playerName = context.getArgument("player", String.class);
 
-        profileService.getBedrockProfile(playerName).ifPresentOrElse(player -> {
-            if (whitelist.remove(player)) {
+        floodgateProfileService.getProfile(playerName).thenAcceptAsync(profile -> {
+            if (whitelist.remove(profile)) {
                 source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_SUCCESS, playerName));
                 if (config.whitelistEnabled() && config.enforceWhitelistEnabled()) {
                     proxy.getPlayer(playerName).ifPresent(p -> p.disconnect(messages.getMessage(MessagesConfig.WHITELIST_REJECTED)));
@@ -140,7 +122,10 @@ public record WhitelistCommandHandler(
             } else {
                 source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_REMOVE_NOT_WHITELISTED, playerName));
             }
-        }, () -> source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName)));
+        }).exceptionallyAsync(_ -> {
+            source.sendMessage(messages.getMessage(MessagesConfig.WHITELIST_PLAYER_DOES_NOT_EXIST, playerName));
+            return null;
+        });
 
         return Command.SINGLE_SUCCESS;
     }
