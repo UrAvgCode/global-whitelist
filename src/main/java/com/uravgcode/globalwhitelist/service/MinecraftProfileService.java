@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class MinecraftProfileService {
+public class MinecraftProfileService implements ProfileService {
     private static final URI API_BASE_URL = URI.create("https://api.minecraftservices.com/minecraft/profile/lookup/name/");
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
 
@@ -27,9 +27,17 @@ public class MinecraftProfileService {
             .build();
     }
 
+    public boolean isProfile(String playerName) {
+        return playerName != null && playerName.matches("[A-Za-z0-9_]{1,16}");
+    }
+
     public CompletableFuture<Optional<PlayerProfile>> getProfile(String playerName) {
         if (playerName == null || playerName.isBlank()) {
             return CompletableFuture.failedFuture(new IllegalArgumentException("player name cannot be null or empty"));
+        }
+
+        if (!isProfile(playerName)) {
+            return CompletableFuture.completedFuture(Optional.empty());
         }
 
         try {
@@ -42,14 +50,8 @@ public class MinecraftProfileService {
             return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .thenApply(response -> switch (response.statusCode()) {
                     case 200 -> parseProfile(response.body());
-                    case 404 -> {
-                        logger.warn("player with name {} not found", playerName);
-                        yield Optional.empty();
-                    }
-                    default -> {
-                        logger.warn("api request failed with status {}: {}", response.statusCode(), response.body());
-                        yield Optional.empty();
-                    }
+                    case 404 -> Optional.empty();
+                    default -> throw new RuntimeException("profile lookup failed");
                 });
 
         } catch (IllegalArgumentException exception) {

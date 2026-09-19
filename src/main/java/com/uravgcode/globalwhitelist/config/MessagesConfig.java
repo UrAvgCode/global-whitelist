@@ -23,6 +23,8 @@ public class MessagesConfig {
     public static final String WHITELIST_REMOVE_NOT_WHITELISTED = "whitelist.remove.not_whitelisted";
 
     public static final String WHITELIST_PLAYER_DOES_NOT_EXIST = "whitelist.player_does_not_exist";
+    public static final String WHITELIST_PLAYER_LOOKUP_FAILED = "whitelist.player_lookup_failed";
+    public static final String WHITELIST_INVALID_PLATFORM = "whitelist.invalid_platform";
 
     public static final String WHITELIST_LIST = "whitelist.list";
     public static final String WHITELIST_LIST_EMPTY = "whitelist.list.empty";
@@ -88,6 +90,8 @@ public class MessagesConfig {
         messages.setProperty(WHITELIST_REMOVE_NOT_WHITELISTED, "<red>Player is not whitelisted");
 
         messages.setProperty(WHITELIST_PLAYER_DOES_NOT_EXIST, "<red>That player does not exist");
+        messages.setProperty(WHITELIST_PLAYER_LOOKUP_FAILED, "<red>Failed to look up that player");
+        messages.setProperty(WHITELIST_INVALID_PLATFORM, "<red>Invalid platform");
 
         messages.setProperty(WHITELIST_LIST, "There are <count> whitelisted player(s): <players>");
         messages.setProperty(WHITELIST_LIST_EMPTY, "There are no whitelisted players");

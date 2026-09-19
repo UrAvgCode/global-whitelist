@@ -5,8 +5,9 @@ import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
-public class FloodgateProfileService {
+public class FloodgateProfileService implements ProfileService {
     private final FloodgateApi api;
 
     public FloodgateProfileService() {
@@ -25,12 +26,21 @@ public class FloodgateProfileService {
 
         final var prefix = api.getPlayerPrefix();
         if (!playerName.startsWith(prefix)) {
-            return CompletableFuture.failedFuture(new IllegalArgumentException("player name doesn't start with prefix"));
+            return CompletableFuture.completedFuture(Optional.empty());
         }
 
         var gamertag = playerName.substring(prefix.length());
         return api.getUuidFor(gamertag)
             .thenApply(uuid -> Optional.ofNullable(uuid)
-                .map(id -> new PlayerProfile(id, playerName)));
+                .map(id -> new PlayerProfile(id, playerName)))
+            .exceptionallyCompose(throwable -> {
+                final var cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
+
+                if (cause instanceof IllegalStateException) {
+                    return CompletableFuture.completedFuture(Optional.empty());
+                }
+
+                return CompletableFuture.failedFuture(cause);
+            });
     }
 }

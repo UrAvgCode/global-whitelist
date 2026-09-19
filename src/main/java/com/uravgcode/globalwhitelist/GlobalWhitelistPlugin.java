@@ -6,6 +6,7 @@ import com.uravgcode.globalwhitelist.config.MessagesConfig;
 import com.uravgcode.globalwhitelist.config.WhitelistConfig;
 import com.uravgcode.globalwhitelist.service.FloodgateProfileService;
 import com.uravgcode.globalwhitelist.service.MinecraftProfileService;
+import com.uravgcode.globalwhitelist.service.ProfileService;
 import com.uravgcode.globalwhitelist.whitelist.PlayerProfile;
 import com.uravgcode.globalwhitelist.whitelist.Whitelist;
 import com.velocitypowered.api.event.ResultedEvent;
@@ -21,6 +22,8 @@ import org.slf4j.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Plugin(
     id = "global-whitelist",
@@ -35,8 +38,7 @@ import java.nio.file.Path;
 )
 public class GlobalWhitelistPlugin {
     private final ProxyServer proxy;
-    private final MinecraftProfileService minecraftProfileService;
-    private final FloodgateProfileService floodgateProfileService;
+    private final Map<String, ProfileService> profileServices;
 
     private final Whitelist whitelist;
     private final WhitelistConfig config;
@@ -45,12 +47,11 @@ public class GlobalWhitelistPlugin {
     @Inject
     public GlobalWhitelistPlugin(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
         this.proxy = server;
-        this.minecraftProfileService = new MinecraftProfileService(logger);
 
+        profileServices = new LinkedHashMap<>();
+        profileServices.put("java", new MinecraftProfileService(logger));
         if (server.getPluginManager().getPlugin("floodgate").isPresent()) {
-            this.floodgateProfileService = new FloodgateProfileService();
-        } else {
-            this.floodgateProfileService = null;
+            profileServices.put("bedrock", new FloodgateProfileService());
         }
 
         this.whitelist = new Whitelist(dataDirectory.resolve("whitelist.json"), logger);
@@ -83,7 +84,7 @@ public class GlobalWhitelistPlugin {
 
         final var commandManager = proxy.getCommandManager();
         final var commandMeta = commandManager.metaBuilder("gwl").plugin(this).build();
-        final var command = WhitelistCommand.createCommand(proxy, minecraftProfileService, floodgateProfileService, whitelist, config, messages);
+        final var command = WhitelistCommand.createCommand(proxy, profileServices, whitelist, config, messages);
         commandManager.register(commandMeta, command);
     }
 }

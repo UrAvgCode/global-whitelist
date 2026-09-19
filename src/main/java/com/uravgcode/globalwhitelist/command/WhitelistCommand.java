@@ -4,12 +4,13 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.uravgcode.globalwhitelist.config.MessagesConfig;
 import com.uravgcode.globalwhitelist.config.WhitelistConfig;
-import com.uravgcode.globalwhitelist.service.FloodgateProfileService;
-import com.uravgcode.globalwhitelist.service.MinecraftProfileService;
+import com.uravgcode.globalwhitelist.service.ProfileService;
 import com.uravgcode.globalwhitelist.whitelist.Whitelist;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.ProxyServer;
+
+import java.util.Map;
 
 public final class WhitelistCommand {
     private static final String PERMISSION_BASE = "globalwhitelist";
@@ -17,13 +18,12 @@ public final class WhitelistCommand {
 
     public static BrigadierCommand createCommand(
         ProxyServer proxy,
-        MinecraftProfileService minecraftProfileService,
-        FloodgateProfileService floodgateProfileService,
+        Map<String, ProfileService> profileServices,
         Whitelist whitelist,
         WhitelistConfig config,
         MessagesConfig messages
     ) {
-        final var handler = new WhitelistCommandHandler(proxy, minecraftProfileService, floodgateProfileService, whitelist, config, messages);
+        final var handler = new WhitelistCommandHandler(proxy, profileServices, whitelist, config, messages);
 
         final var node = BrigadierCommand.literalArgumentBuilder("globalwhitelist")
             .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
@@ -54,10 +54,9 @@ public final class WhitelistCommand {
             .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
                 .suggests(handler::suggestOnlinePlayers)
                 .executes(handler::add)
-                .then(BrigadierCommand.literalArgumentBuilder("java")
-                    .executes(handler::addJava))
-                .then(BrigadierCommand.literalArgumentBuilder("bedrock")
-                    .executes(handler::addBedrock))
+                .then(BrigadierCommand.requiredArgumentBuilder("platform", StringArgumentType.word())
+                    .suggests(handler::suggestPlatforms)
+                    .executes(handler::add))
             );
     }
 
@@ -67,10 +66,9 @@ public final class WhitelistCommand {
             .then(BrigadierCommand.requiredArgumentBuilder("player", StringArgumentType.word())
                 .suggests(handler::suggestWhitelistedPlayers)
                 .executes(handler::remove)
-                .then(BrigadierCommand.literalArgumentBuilder("java")
-                    .executes(handler::removeJava))
-                .then(BrigadierCommand.literalArgumentBuilder("bedrock")
-                    .executes(handler::removeBedrock))
+                .then(BrigadierCommand.requiredArgumentBuilder("platform", StringArgumentType.word())
+                    .suggests(handler::suggestPlatforms)
+                    .executes(handler::remove))
             );
     }
 
