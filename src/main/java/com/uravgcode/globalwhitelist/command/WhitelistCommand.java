@@ -37,6 +37,7 @@ public final class WhitelistCommand {
             .then(buildEnforcedCommand(handler))
             .then(buildUnenforcedCommand(handler))
             .then(buildReloadCommand(handler))
+            .then(buildVersionCommand(handler))
             .build();
 
         return new BrigadierCommand(node);
@@ -106,5 +107,11 @@ public final class WhitelistCommand {
         return BrigadierCommand.literalArgumentBuilder("reload")
             .requires(source -> source.hasPermission(PERMISSION_ADMIN))
             .executes(handler::reload);
+    }
+
+    private static LiteralArgumentBuilder<CommandSource> buildVersionCommand(WhitelistCommandHandler handler) {
+        return BrigadierCommand.literalArgumentBuilder("version")
+            .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
+            .executes(handler::version);
     }
 }

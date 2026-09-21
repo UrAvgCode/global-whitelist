@@ -7,6 +7,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.uravgcode.globalwhitelist.config.MessagesConfig;
 import com.uravgcode.globalwhitelist.config.WhitelistConfig;
 import com.uravgcode.globalwhitelist.service.ProfileService;
+import com.uravgcode.globalwhitelist.update.UpdateChecker;
 import com.uravgcode.globalwhitelist.whitelist.PlayerProfile;
 import com.uravgcode.globalwhitelist.whitelist.Whitelist;
 import com.velocitypowered.api.command.CommandSource;
@@ -221,6 +222,12 @@ public record WhitelistCommandHandler(
         config.reload();
         messages.reload();
         context.getSource().sendMessage(messages.getMessage(MessagesConfig.WHITELIST_RELOAD));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    public int version(CommandContext<CommandSource> context) {
+        final var updateChecker = new UpdateChecker();
+        updateChecker.sendVersionInfo(context.getSource());
         return Command.SINGLE_SUCCESS;
     }
 }

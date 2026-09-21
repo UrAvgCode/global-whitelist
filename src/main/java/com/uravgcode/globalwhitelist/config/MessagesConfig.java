@@ -81,7 +81,7 @@ public class MessagesConfig {
     }
 
     private void loadDefaults() {
-        messages.setProperty(WHITELIST_HELP, "<red>/globalwhitelist <add|remove|list|on|off|enforce|unenforce|reload>");
+        messages.setProperty(WHITELIST_HELP, "<red>/globalwhitelist <add|remove|list|on|off|enforce|unenforce|reload|version>");
 
         messages.setProperty(WHITELIST_ADD_SUCCESS, "Added <player> to the whitelist");
         messages.setProperty(WHITELIST_ADD_ALREADY_WHITELISTED, "<red>Player is already whitelisted");
