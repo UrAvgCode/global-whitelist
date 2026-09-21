@@ -50,9 +50,6 @@ public class GlobalWhitelistPlugin {
 
         profileServices = new LinkedHashMap<>();
         profileServices.put("java", new MinecraftProfileService(logger));
-        if (server.getPluginManager().getPlugin("floodgate").isPresent()) {
-            profileServices.put("bedrock", new FloodgateProfileService());
-        }
 
         this.whitelist = new Whitelist(dataDirectory.resolve("whitelist.json"), logger);
         this.config = new WhitelistConfig(dataDirectory.resolve("config.properties"), logger);
@@ -67,6 +64,10 @@ public class GlobalWhitelistPlugin {
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
+        if (proxy.getPluginManager().getPlugin("floodgate").isPresent()) {
+            profileServices.put("bedrock", new FloodgateProfileService());
+        }
+
         config.reload();
         whitelist.reload();
         messages.reload();
