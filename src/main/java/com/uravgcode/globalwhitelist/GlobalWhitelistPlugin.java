@@ -72,20 +72,21 @@ public class GlobalWhitelistPlugin {
         whitelist.reload();
         messages.reload();
 
-        proxy.getEventManager().register(this, LoginEvent.class, loginEvent -> {
-            if (!config.whitelistEnabled()) {
-                return;
-            }
-
-            final var player = loginEvent.getPlayer();
-            if (!whitelist.contains(new PlayerProfile(player.getUniqueId(), player.getUsername()))) {
-                loginEvent.setResult(ResultedEvent.ComponentResult.denied(messages.getMessage(MessagesConfig.WHITELIST_REJECTED)));
-            }
-        });
-
         final var commandManager = proxy.getCommandManager();
         final var commandMeta = commandManager.metaBuilder("gwl").plugin(this).build();
         final var command = WhitelistCommand.createCommand(proxy, profileServices, whitelist, config, messages);
         commandManager.register(commandMeta, command);
+    }
+
+    @Subscribe
+    public void onLogin(LoginEvent event) {
+        if (!config.whitelistEnabled()) {
+            return;
+        }
+
+        final var player = event.getPlayer();
+        if (!whitelist.contains(new PlayerProfile(player.getUniqueId(), player.getUsername()))) {
+            event.setResult(ResultedEvent.ComponentResult.denied(messages.getMessage(MessagesConfig.WHITELIST_REJECTED)));
+        }
     }
 }
