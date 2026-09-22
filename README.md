@@ -24,3 +24,4 @@ on their username.
 | `/globalwhitelist enforced`                   | Enforce the whitelist. Players not on the whitelist (if enabled) will be kicked | `globalwhitelist.admin` |
 | `/globalwhitelist unenforced`                 | Disable enforcement. Players not on the whitelist will not be kicked            | `globalwhitelist.admin` |
 | `/globalwhitelist reload`                     | Reload the whitelist configuration                                              | `globalwhitelist.admin` |
+| `/globalwhitelist version`                    | Displays the current plugin version and checks for updates                      | `globalwhitelist.admin` |

@@ -111,7 +111,7 @@ public final class WhitelistCommand {
 
     private static LiteralArgumentBuilder<CommandSource> buildVersionCommand(WhitelistCommandHandler handler) {
         return BrigadierCommand.literalArgumentBuilder("version")
-            .requires(source -> source.hasPermission(PERMISSION_BASE) || source.hasPermission(PERMISSION_ADMIN))
+            .requires(source -> source.hasPermission(PERMISSION_ADMIN))
             .executes(handler::version);
     }
 }
