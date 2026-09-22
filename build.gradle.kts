@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.uravgcode"
-version = "1.2.0"
+version = "1.2.1"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))
